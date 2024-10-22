@@ -36,7 +36,7 @@ async function sendOTP(phone, otp) {
     }
 }
 
-// Endpoint to request OTP (change to POST since we're receiving data in body)
+// Endpoint to request OTP (use POST)
 router.post('/request-otp', async (req, res) => {
     const { phone } = req.body;
 
@@ -74,7 +74,7 @@ router.post('/request-otp', async (req, res) => {
     }
 });
 
-// Endpoint to verify OTP (use POST since we're verifying data)
+// Endpoint to verify OTP (use POST)
 router.post('/verify-otp', async (req, res) => {
     const { phone, otp } = req.body;
 
@@ -130,6 +130,39 @@ router.post('/verify-otp', async (req, res) => {
             success: false,
             message: 'Server error.'
         });
+    }
+});
+
+// Resend OTP API
+router.post('/resend-otp', async (req, res) => {
+    const { phone } = req.body;
+
+    // Validate phone number
+    if (!/^[1-9]\d{9}$/.test(phone)) {
+        return res.status(400).json({ success: false, message: 'Phone number must be 10 digits and cannot start with 0.' });
+    }
+
+    try {
+        // Check if user exists
+
+        // Generate a new OTP
+        const otp = generateOTP();
+
+        // Save the new OTP to the database
+        const otpEntry = new Otp({ phone, otp });
+        await otpEntry.save();
+
+        // Send the new OTP
+        await sendOTP(phone, otp);
+
+        console.log(`Resent OTP to ${phone}: ${otp}`);
+
+        // Return success response
+        return res.json({ success: true, message: 'OTP resent successfully.' });
+
+    } catch (error) {
+        console.error('Error resending OTP:', error);
+        return res.status(500).json({ success: false, message: 'Failed to resend OTP. Please try again later.' });
     }
 });
 
