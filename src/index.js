@@ -1,43 +1,47 @@
-import express, { json, urlencoded } from 'express';
-const app = express()
+import express from 'express';
+const app = express();
 import cors from 'cors';
 import { config } from 'dotenv';
+import bodyParser from 'body-parser'; // Importing body-parser
 import authRoutes from './routes/authenticate.js';
 import vehicleOwnerRoutes from './routes/vehicle-Owner/vehicleOwner.js';
 import vehicleHistoryRoutes from './routes/vehicle-Owner/vehicleHistory.js';
 import personalInfoRoutes from './routes/personalInfo.js';
 
-
-config(
-    {
-        path : "./.env"
-    }
-)
+// Load environment variables
+config({
+    path: "./.env"
+});
 
 const port = process.env.PORT || 4001;
 
-import('./db/db.js')
+// Import your database connection
+import('./db/db.js');
 
+// CORS setup
 app.use(
     cors({
-        origin : process.env.CORS_ORIGIN,
+        origin: process.env.CORS_ORIGIN,
         credentials: true
     })
-)
+);
 
-app.use(json({limit : "16kb"}));
-app.use(urlencoded({extended:true,limit : "16kb"}));
+// Using body-parser for handling JSON and URL-encoded bodies
+app.use(bodyParser.json({ limit: "16kb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "16kb" }));
 
-app.get('/', function(req, res){
-    res.send('backend is working !');
-})
+// Sample route to check backend status
+app.get('/', (req, res) => {
+    res.send('Backend is working!');
+});
 
+// Route handlers
 app.use('/authenticate', authRoutes);
-app.use('/vehicle-owner',vehicleOwnerRoutes);
+app.use('/vehicle-owner', vehicleOwnerRoutes);
 app.use('/vehicleHistory', vehicleHistoryRoutes);
 app.use('/personalInfo', personalInfoRoutes);
 
+// Start the server
 app.listen(port, () => {
-    console.log("serveris running "+4000);
-})
-
+    console.log(`Server is running on port ${port}`);
+});
