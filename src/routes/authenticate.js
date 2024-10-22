@@ -1,24 +1,25 @@
 import express from 'express';
-import User from '../models/users.models.js';  // Ensure to include '.js' in imports when using ES modules
+import User from '../models/users.models.js';  // Ensure to include '.js' in ES module imports
 import twilio from 'twilio';
 import Vehicle from '../models/vehicle.models.js';
 import Otp from '../models/otp.models.js';
+import { config } from 'dotenv';
+
+// Load environment variables
+config();
 
 const router = express.Router();
-const otpStore = {};
 
-// Twilio credentials
-require('dotenv').config();
-
+// Twilio credentials from environment variables
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
 
 const client = new twilio(accountSid, authToken);
 
-// Helper function to generate random OTP
-function generateOTP(phone) {
-    return Math.floor(1000 + Math.random() * 9000);
+// Helper function to generate a random OTP
+function generateOTP() {
+    return Math.floor(1000 + Math.random() * 9000);  // 4-digit OTP
 }
 
 // Helper function to send OTP using Twilio
@@ -30,10 +31,13 @@ async function sendOTP(phone, otp) {
             to: `+91${phone}`
         });
     } catch (error) {
+        console.error('Failed to send OTP via Twilio:', error.message);
         throw new Error('Failed to send OTP via Twilio');
     }
 }
-router.get('/', async (req, res) => {
+
+// Endpoint to request OTP (change to POST since we're receiving data in body)
+router.post('/request-otp', async (req, res) => {
     const { phone } = req.body;
 
     // Validate phone number
@@ -44,23 +48,20 @@ router.get('/', async (req, res) => {
     try {
         // Check if user exists, if not, create a new user
         let user = await User.findOne({ phone });
-
         if (!user) {
             user = new User({ phone });
+            await user.save();
         }
 
         // Generate OTP
-        const otp = Math.floor(1000 + Math.random() * 9000);
-        const otpEntry = new Otp({
-            phone,
-            otp
-        });
+        const otp = generateOTP();
 
         // Save OTP entry to the database
+        const otpEntry = new Otp({ phone, otp });
         await otpEntry.save();
 
         // Send OTP to the user's phone
-        // await sendOTP(phone, otp);
+        await sendOTP(phone, otp);
 
         console.log(`OTP sent to ${phone}: ${otp}`);
 
@@ -73,8 +74,8 @@ router.get('/', async (req, res) => {
     }
 });
 
-
-router.get('/verify-otp', async (req, res) => {
+// Endpoint to verify OTP (use POST since we're verifying data)
+router.post('/verify-otp', async (req, res) => {
     const { phone, otp } = req.body;
 
     // Validate phone number format
@@ -97,9 +98,6 @@ router.get('/verify-otp', async (req, res) => {
             });
         }
 
-        console.log(otpEntry.otp);
-        console.log(otp);
-        console.log(121)
         // Check if the entered OTP matches the one in the database
         if (otpEntry.otp === otp) {
             await Otp.deleteOne({ _id: otpEntry._id }); // Remove OTP after successful verification
