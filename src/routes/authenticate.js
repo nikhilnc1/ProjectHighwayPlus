@@ -37,7 +37,7 @@ async function sendOTP(phone, otp) {
 }
 
 // Endpoint to request OTP (use POST)
-router.post('/request-otp', async (req, res) => {
+router.get('/request-otp', async (req, res) => {
     const { phone } = req.body;
 
     // Validate phone number
@@ -48,10 +48,7 @@ router.post('/request-otp', async (req, res) => {
     try {
         // Check if user exists, if not, create a new user
         let user = await User.findOne({ phone });
-        if (!user) {
-            user = new User({ phone });
-            await user.save();
-        }
+       
 
         // Generate OTP
         const otp = generateOTP();
@@ -75,7 +72,7 @@ router.post('/request-otp', async (req, res) => {
 });
 
 // Endpoint to verify OTP (use POST)
-router.post('/verify-otp', async (req, res) => {
+router.get('/verify-otp', async (req, res) => {
     const { phone, otp } = req.body;
 
     // Validate phone number format
@@ -134,7 +131,7 @@ router.post('/verify-otp', async (req, res) => {
 });
 
 // Resend OTP API
-router.post('/resend-otp', async (req, res) => {
+router.get('/resend-otp', async (req, res) => {
     const { phone } = req.body;
 
     // Validate phone number

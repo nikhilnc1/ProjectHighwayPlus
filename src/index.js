@@ -38,8 +38,8 @@ app.get('/', (req, res) => {
 // Route handlers
 app.use('/authenticate', authRoutes);
 app.use('/vehicle-owner', vehicleOwnerRoutes);
-app.use('/vehicleHistory', vehicleHistoryRoutes);
-app.use('/personalInfo', personalInfoRoutes);
+app.use('/vehicle-journey-history', vehicleHistoryRoutes);
+app.use('/personal-info', personalInfoRoutes);
 
 // Start the server
 app.listen(port, () => {

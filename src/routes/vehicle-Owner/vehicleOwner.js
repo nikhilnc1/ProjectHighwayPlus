@@ -10,13 +10,13 @@ router.post("/add-vehicle-info", async function (req, res) {
     try {
         // Validate that vehicles are provided
         if (!vehicles || !Array.isArray(vehicles) || vehicles.length === 0) {
-            return res.status(400).json({ error: "Vehicles information is required." });
+            return res.status(400).json({success: false, message: "Vehicles information is required." });
         }
 
         // Find the user by phone number
         const user = await User.findOne({ phone });
         if (!user) {
-            return res.status(404).json({ error: "User not found." });
+            return res.status(404).json({ success: false, message: "User not found." });
         }
 
         const vehicleIds = [];
@@ -47,7 +47,7 @@ router.post("/add-vehicle-info", async function (req, res) {
         });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: "Failed to register vehicles. Please try again." });
+        res.status(500).json({ success: false, message: "Failed to register vehicles. Please try again." });
     }
 });
 
